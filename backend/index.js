@@ -6,6 +6,7 @@ import axios from 'axios';
 import FormData from 'form-data';
 import fs from 'fs';
 import multer from 'multer';
+import mime from 'mime';
 import {getMessages, createMessage} from './controllers/controller.js';
 import messages from './models/model.js';
 
@@ -100,27 +101,71 @@ app.post("/uploadmedia", upload.single('file'), async (req, res) => {
     }
 
     console.log(req.file.path);
+    let file = fs.createReadStream(req.file.path);
+    let type = file.type;
     let data = new FormData();
     data.append('messaging_product', 'whatsapp');
-    data.append('file', fs.createReadStream(req.file.path));
+    data.append('file', file, {
+        filename: req.file.originalname,
+        contentType: type
+    }
+    )
 
     let config = {
         method: 'post',
         maxBodyLength: Infinity,
         url: 'https://graph.facebook.com/v19.0/300955449770510/media',
-        headers: {
-            'Authorization': `Bearer ${GRAPH_API_TOKEN}`,
-            ...data.getHeaders()
+        headers: { 
+          'Authorization': `Bearer ${GRAPH_API_TOKEN}`, 
+          ...data.getHeaders()
         },
-        data: data
-    };
+        data : data
+      };
+      
+      axios.request(config)
 
-    try {
-        const response = await axios.request(config);
+
+      .then((response) => {
+
         console.log(JSON.stringify(response.data));
-        res.send('File uploaded successfully.');
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Failed to upload file.');
-    }
+        const id = response.data.id;
+        let data = JSON.stringify({
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": "918850382695",
+            "type": "image",
+            "image": {
+              "id": id
+            }
+          });
+          
+          let config = {
+            method: 'post',
+            maxBodyLength: Infinity,
+            url: 'https://graph.facebook.com/v19.0/300955449770510/messages',
+            headers: { 
+              'Content-Type': 'application/json', 
+              'Authorization': `Bearer ${GRAPH_API_TOKEN}`
+            },
+            data : data
+          };
+          
+          axios.request(config)
+          .then(async (response) => {
+            console.log(JSON.stringify(response.data));
+            const newMessage = new messages({
+                message: `Image ${id} was sent`,
+                user: "web"
+            });
+            await newMessage.save();
+            console.log("Message saved to db");
+          })
+          .catch((error) => {
+            console.log(error.response.data);
+          });
+
+      })
+      .catch((error) => {
+        console.log(error.response.data);
+      });      
 });

@@ -15,7 +15,7 @@
     <input type="text" id="messageInput" placeholder="Type a message...">
     <button onclick="sendMessage()">Send</button>
     <form action="http://localhost:3000/uploadmedia" method="post" enctype="multipart/form-data">
-      <input type="file" name="file">
+      <input type="file" name="file" accept="image/*">
       <button type="submit">Upload File</button>
     </form>
   </div>
