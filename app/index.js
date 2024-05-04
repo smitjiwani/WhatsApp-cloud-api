@@ -1,8 +1,8 @@
 function sendMessage() {
   var messageInput = document.getElementById('messageInput');
-  var message = messageInput.value.trim();
+  var message = messageInput.value.trim();  
 
-  fetch('http://localhost:3000/messages', {
+  fetch('https://thundering-clumsy-day.glitch.me/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -26,7 +26,7 @@ function sendMessage() {
 
 function displayMessage(message, isSent) {
   var messagesContainer = document.getElementById('messages');
-  fetch('http://localhost:3000/messages')
+  fetch('https://thundering-clumsy-day.glitch.me/messages')
     .then(response => response.json())
     .then(data => {
       messagesContainer.innerHTML = data.map(message => {
@@ -36,7 +36,7 @@ function displayMessage(message, isSent) {
 }
 
 function sendToWhatsApp(message) {
-  const fromId = '300955449770510';
+
   const url = `https://graph.facebook.com/v19.0/300955449770510/messages`;
   const accessToken = 'EAAdwhZBodAG8BO9CdxrmZCk8SQQNQm7soc4ZBpPPeENYGQ7ieeWWhZCQ3QC7ZAynjNtPEfJTIPp8ika1Qt7O3MayKt4ANgaeVEXqyy7KEhnicdEabP5Wzvk3QPTxGdXAtH88Q8TIoUzXjWmrzOFmAwTsXZBkk8ng3ZBNSIZCnm6y23dDyz7TNnqRHa5FL024yhm7It492a7H79Ne1aFrYhAZD';
 

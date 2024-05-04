@@ -2,6 +2,10 @@ import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import axios from 'axios';
+import FormData from 'form-data';
+import fs from 'fs';
+import multer from 'multer';
 import {getMessages, createMessage} from './controllers/controller.js';
 import messages from './models/model.js';
 
@@ -12,6 +16,7 @@ const { WEBHOOK_VERIFY_TOKEN, GRAPH_API_TOKEN, PORT } = process.env;
 const app = express();
 const port = process.env.PORT || 5000;
 const connectionUrl = process.env.MONGODB_URI;
+const upload = multer({ dest: 'uploads/' });
 
 app.use(express.json());
 app.use(cors());
@@ -87,4 +92,35 @@ app.get("/webhook", (req, res) => {
 app.get("/", (req, res) => {
     res.send(`<pre>Nothing to see here.
 Checkout README.md to start.</pre>`);
+});
+
+app.post("/uploadmedia", upload.single('file'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).send('No file uploaded.');
+    }
+
+    console.log(req.file.path);
+    let data = new FormData();
+    data.append('messaging_product', 'whatsapp');
+    data.append('file', fs.createReadStream(req.file.path));
+
+    let config = {
+        method: 'post',
+        maxBodyLength: Infinity,
+        url: 'https://graph.facebook.com/v19.0/300955449770510/media',
+        headers: {
+            'Authorization': `Bearer ${GRAPH_API_TOKEN}`,
+            ...data.getHeaders()
+        },
+        data: data
+    };
+
+    try {
+        const response = await axios.request(config);
+        console.log(JSON.stringify(response.data));
+        res.send('File uploaded successfully.');
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Failed to upload file.');
+    }
 });
